@@ -5,47 +5,64 @@
     <AssemblyName>ConfigServer.Gui</AssemblyName>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <PropertyGroup>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+  </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="wwwroot\Assets\css\**" />
     <Content Remove="App\**\*.js;App\**\*.js.map" />
+    <Content Remove="wwwroot\Assets\css\**" />
+    <EmbeddedResource Remove="wwwroot\Assets\css\**" />
+    <None Remove="wwwroot\Assets\css\**" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App\systemjs.config.js">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="systemjs.config.js">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConfigProviders\ConfigServer.AzureBlobStorageProvider\ConfigServer.AzureBlobStorageProvider.csproj" />
+    <ProjectReference Include="..\ConfigProviders\ConfigServer.FileProvider\ConfigServer.FileProvider.csproj" />
     <ProjectReference Include="..\ConfigProviders\ConfigServer.InMemoryProvider\ConfigServer.InMemoryProvider.csproj" />
     <ProjectReference Include="..\ConfigServer.Server\ConfigServer.Server.csproj" />
     <ProjectReference Include="..\ConfigServer.Core\ConfigServer.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc">
-      <Version>1.1.0</Version>
+      <Version>1.1.2</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Console">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Debug">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions">
-      <Version>1.1.0</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink.Loader">
       <Version>14.1.0</Version>
@@ -56,12 +73,13 @@
       <Version>2.2.301</Version>
     </DotNetCliToolReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FileStore\Configs\" />
+    <Folder Include="FileStore\Resources\" />
+    <Folder Include="wwwroot\Assets\img\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
   </PropertyGroup>
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
-    <Exec Command="bower install" />
-    <Exec Command="dotnet bundle" />
-  </Target>
   <Target Name="PostpublishScript" AfterTargets="Publish" Condition=" '$(IsCrossTargetingBuild)' != 'true' " />
 </Project>

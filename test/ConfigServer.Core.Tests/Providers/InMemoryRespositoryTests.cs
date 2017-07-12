@@ -1,4 +1,5 @@
 ﻿using ConfigServer.InMemoryProvider;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,20 +12,24 @@ namespace ConfigServer.Core.Tests
     {
         private readonly ConfigurationRegistry configurationCollection;
         private readonly IConfigRepository target;
+        private readonly IConfigClientRepository clientTarget;
+
 
         public InMemoryRespositoryTests()
         {
             configurationCollection = new ConfigurationRegistry();
             configurationCollection.BuildAndAddRegistration<SimpleConfig>();
-            target = new InMemoryRepository();
+            var repo = new InMemoryRepository();
+            target = repo;
+            clientTarget = repo;
         }
 
         [Fact]
         public async Task CanSaveAndRetriveAsync()
         {
-            var configId = new ConfigurationIdentity("3E37AC18-A00F-47A5-B84E-C79E0823F6D4");
+            var configId = new ConfigurationIdentity(new ConfigurationClient("3E37AC18-A00F-47A5-B84E-C79E0823F6D4"), new Version(1, 0));
             const int testValue = 23;
-            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId.ClientId);
+            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId);
 
 
             await target.UpdateConfigAsync(config);
@@ -35,9 +40,9 @@ namespace ConfigServer.Core.Tests
         [Fact]
         public async Task CanSaveAndRetriveWithTypeAsync()
         {
-            var configId = new ConfigurationIdentity("3E37AC18-A00F-47A5-B84E-C79E0823F6D4");
+            var configId = new ConfigurationIdentity(new ConfigurationClient("3E37AC18-A00F-47A5-B84E-C79E0823F6D4"), new Version(1, 0));
             const int testValue = 23;
-            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId.ClientId);
+            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId);
 
 
             await target.UpdateConfigAsync(config);
@@ -54,8 +59,8 @@ namespace ConfigServer.Core.Tests
                 Name = "Client 1",
                 Description = "A description Client"
             };
-            await target.UpdateClientAsync(client);
-            var result =(await target.GetClientsAsync()).ToList();
+            await clientTarget.UpdateClientAsync(client);
+            var result =(await clientTarget.GetClientsAsync()).ToList();
             Assert.Equal(1, result.Count);
             Assert.Equal(client.ClientId, result[0].ClientId);
             Assert.Equal(client.Name, result[0].Name);
@@ -68,10 +73,10 @@ namespace ConfigServer.Core.Tests
         {
             var client = new ConfigurationClient { ClientId = "3E37AC18-A00F-47A5-B84E-C79E0823F6D4", Name = "Cleint 1", Description = "Cleint Description" };
             var clientUpdated = new ConfigurationClient { ClientId = "3E37AC18-A00F-47A5-B84E-C79E0823F6D4", Name = "Client 1", Description = "Client Description" };
-            await target.UpdateClientAsync(client);
-            await target.UpdateClientAsync(clientUpdated);
+            await clientTarget.UpdateClientAsync(client);
+            await clientTarget.UpdateClientAsync(clientUpdated);
 
-            var result = (await target.GetClientsAsync()).ToList();
+            var result = (await clientTarget.GetClientsAsync()).ToList();
             Assert.Equal(1, result.Count);
             Assert.Equal(client.ClientId, result[0].ClientId);
             Assert.Equal(clientUpdated.Name, result[0].Name);
@@ -83,22 +88,22 @@ namespace ConfigServer.Core.Tests
         {
             var client = new ConfigurationClient { ClientId = "3E37AC18-A00F-47A5-B84E-C79E0823F6D4" };
 
-            var configId = new ConfigurationIdentity(client.ClientId);
+            var configId = new ConfigurationIdentity(client, new Version(1, 0));
             const int testValue = 23;
 
-            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId.ClientId);
+            var config = new ConfigInstance<SimpleConfig>(new SimpleConfig { IntProperty = testValue }, configId);
 
-            await target.UpdateClientAsync(client);
+            await clientTarget.UpdateClientAsync(client);
             var result = await target.GetAsync<SimpleConfig>(configId);
             Assert.NotNull(result);
-            Assert.Equal(client.ClientId, config.ClientId);
+            Assert.Equal(client.ClientId, config.ConfigurationIdentity.Client.ClientId);
             Assert.Equal(0, result.Configuration.IntProperty);
         }
 
         [Fact]
         public async Task CanSaveAndRetriveCollectionAsync()
         {
-            var configId = new ConfigurationIdentity("3E37AC18-A00F-47A5-B84E-C79E0823F6D4");
+            var configId = new ConfigurationIdentity(new ConfigurationClient("3E37AC18-A00F-47A5-B84E-C79E0823F6D4"), new Version(1, 0));
             const int testValue = 23;
             const int testValue2 = 24;
             var values = new[]
@@ -106,7 +111,7 @@ namespace ConfigServer.Core.Tests
                 new SimpleConfig { IntProperty = testValue },
                 new SimpleConfig { IntProperty = testValue2 }
             };
-            var config = new ConfigCollectionInstance<SimpleConfig>(values, configId.ClientId);
+            var config = new ConfigCollectionInstance<SimpleConfig>(values, configId);
 
 
             await target.UpdateConfigAsync(config);
@@ -121,7 +126,7 @@ namespace ConfigServer.Core.Tests
         [Fact]
         public async Task CanSaveAndRetriveCollectionWithTypeAsync()
         {
-            var configId = new ConfigurationIdentity("3E37AC18-A00F-47A5-B84E-C79E0823F6D4");
+            var configId = new ConfigurationIdentity(new ConfigurationClient("3E37AC18-A00F-47A5-B84E-C79E0823F6D4"), new Version(1, 0));
             const int testValue = 23;
             const int testValue2 = 24;
             var values = new[]
@@ -129,7 +134,7 @@ namespace ConfigServer.Core.Tests
                 new SimpleConfig { IntProperty = testValue },
                 new SimpleConfig { IntProperty = testValue2 }
             };
-            var config = new ConfigCollectionInstance<SimpleConfig>(values, configId.ClientId);
+            var config = new ConfigCollectionInstance<SimpleConfig>(values, configId);
 
 
             await target.UpdateConfigAsync(config);

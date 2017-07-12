@@ -1,57 +1,85 @@
-﻿import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { ConfigurationClient } from '../interfaces/client';
-
+﻿import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { IConfigurationClient } from '../interfaces/configurationClient';
+import { IConfigurationClientGroup } from '../interfaces/configurationClientGroup';
 
 @Component({
     selector: 'edit-client-input',
     template: `
-    <h4>Name:</h4>
-    <input [(ngModel)]="csClient.name" type="text">
-    <h4>Group:</h4>
-    <input [(ngModel)]="csClient.group" type="text" list="groups">
-    <datalist id="groups">
-        <option *ngFor="let existingGroup of existingGroups" value="{{existingGroup}}">
-    </datalist>
-    <h4>Enviroment:</h4>
-    <input [(ngModel)]="csClient.enviroment" type="text" list="enviroments">
-    <datalist id="enviroments">
-        <option *ngFor="let existingEnviroment of existingEnviroments" value="{{existingEnviroment}}">
-    </datalist>
-    <h4>Description:</h4>
-    <input [(ngModel)]="csClient.description" type="text">
-
-`
-
+    <div class="row">
+        <div class="col-sm-6 col-md-4">
+            <h4>Name:</h4>
+            <input id="client-name-input" [(ngModel)]="csClient.name" type="text" class="form-control">
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <h4>Group:</h4>
+            <select id="client-group-input" class="form-control" [(ngModel)]="csClient.group">
+                <option *ngFor="let p of csExistingGroups" [value]="p.groupId">{{p.name}}</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <h4>Enviroment:</h4>
+            <input id="client-enviroment-input" [(ngModel)]="csClient.enviroment" type="text" list="enviroments" class="form-control">
+            <datalist id="enviroments">
+                <option *ngFor="let existingEnviroment of existingEnviroments" value="{{existingEnviroment}}">
+            </datalist>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <h4>Description:</h4>
+            <input id="client-description-input" [(ngModel)]="csClient.description" type="text" class="form-control">
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <h4>Read claim:</h4>
+            <input id="client-readclaim-input" [(ngModel)]="csClient.readClaim" type="text" class="form-control">
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <h4>Configurator claim:</h4>
+            <input id="client-configuratorclaim-input" [(ngModel)]="csClient.configuratorClaim" type="text" class="form-control">
+        </div>
+    </div>
+    <hr/>
+    <edit-clientsetting-input [(csIsValid)]="csIsValid" [csSettings]="csClient.settings"></edit-clientsetting-input>
+`,
 })
 export class EditClientInputComponent {
+
     @Input()
-    csClient: ConfigurationClient;
+    public csClient: IConfigurationClient;
     @Output()
-    csClientChange: EventEmitter<ConfigurationClient> = new EventEmitter<ConfigurationClient>();
-    existingGroups: string[]
-    existingEnviroments: string[]
-    
-    private _csAllClient : ConfigurationClient[]
+    public csClientChange: EventEmitter<IConfigurationClient> = new EventEmitter<IConfigurationClient>();
+
+    @Output()
+    public csIsValidChange: EventEmitter<boolean> = new EventEmitter<boolean>();
     @Input()
-    set csAllClient(value: ConfigurationClient[]) {
+    public csExistingGroups: IConfigurationClientGroup[];
+    public existingEnviroments: string[];
+    private _csIsValid: boolean;
+    @Input()
+    get csIsValid(): boolean { return this._csIsValid; }
+    set csIsValid(value: boolean) {
+        this._csIsValid = value;
+        this.csIsValidChange.emit(value);
+    }
+
+    private _csAllClient: IConfigurationClient[];
+    @Input()
+    set csAllClient(value: IConfigurationClient[]) {
         this._csAllClient = value;
         if (value) {
-            this.existingEnviroments = this.toDistinct(value.map(item => item.enviroment));
-            this.existingGroups = this.toDistinct(value.map(item => item.group));
-
+            this.existingEnviroments = this.toDistinct(value.map((item) => item.enviroment));
         }
-    };
+    }
+
     constructor() {
-        this.existingGroups = new Array<string>();
+        this.csExistingGroups = new Array<IConfigurationClientGroup>();
         this.existingEnviroments = new Array<string>();
     }
 
     private toDistinct(values: string[]) {
-        var set = new Object();
+        const set = new Object();
         values.forEach((value) => {
             set[value] = 1;
-        })
-        var keys = Object.keys(set);
-        return keys.filter((value)=> value !== "null")
+        });
+        const keys = Object.keys(set);
+        return keys.filter((value) => value !== "null");
     }
 }

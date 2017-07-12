@@ -1,5 +1,4 @@
-﻿using ConfigServer.Sample.Models;
-using ConfigServer.Server;
+﻿using ConfigServer.Server;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -7,10 +6,10 @@ using System.Linq;
 using Newtonsoft.Json;
 using Xunit;
 using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
-using ConfigServer.Core.Tests.TestModels;
 using Moq;
+using ConfigServer.Sample.Models;
+using ConfigServer.Core.Tests.TestModels;
 
 namespace ConfigServer.Core.Tests.Hosting
 {
@@ -23,7 +22,7 @@ namespace ConfigServer.Core.Tests.Hosting
         private JObject updatedObject;
         private SampleConfig updatedSample;
 
-        private const string clientId = "7aa7d5f0-90fb-420b-a906-d482428a0c44";
+        private readonly ConfigurationIdentity clientId = new ConfigurationIdentity(new ConfigurationClient("7aa7d5f0-90fb-420b-a906-d482428a0c44"), new Version(1, 0));
 
 
         public ConfigurationEditModelMapperTests()
@@ -77,7 +76,7 @@ namespace ConfigServer.Core.Tests.Hosting
         [Fact]
         public void MapsRegularValues()
         {
-            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition);
+            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition.Get<SampleConfig>());
             Assert.Equal(sample.Choice, response.Choice);
             Assert.Equal(sample.IsLlamaFarmer, response.IsLlamaFarmer);
             Assert.Equal(sample.Decimal, response.Decimal);
@@ -88,14 +87,14 @@ namespace ConfigServer.Core.Tests.Hosting
         [Fact]
         public void MapsOptionValues()
         {
-            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition);
+            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition.Get<SampleConfig>());
             Assert.Equal(sample.Option.Id.ToString(), response.Option);
         }
 
         [Fact]
         public void MapsOptionsValues()
         {
-            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition);
+            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition.Get<SampleConfig>());
             var expected = sample.MoarOptions.Select(s => s.Id.ToString()).ToList();
             Assert.Equal(expected, response.MoarOptions);
         }
@@ -103,7 +102,7 @@ namespace ConfigServer.Core.Tests.Hosting
         [Fact]
         public void MapsListOfConfigsValues()
         {
-            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition);
+            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(sample, clientId), definition.Get<SampleConfig>());
             var listOfConfigs = response.ListOfConfigs as IEnumerable<dynamic>;
             Assert.Equal(1, listOfConfigs.Count());
             Assert.Equal(sample.ListOfConfigs[0].Name, listOfConfigs.First().Name);
@@ -114,7 +113,7 @@ namespace ConfigServer.Core.Tests.Hosting
         [Fact]
         public void MapsNewObject()
         {
-            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(new SampleConfig(), clientId), definition);
+            var response = (dynamic)target.MapToEditConfig(new ConfigInstance<SampleConfig>(new SampleConfig(), clientId), definition.Get<SampleConfig>());
             var listOfConfigs = response.ListOfConfigs as IEnumerable<dynamic>;
 
             var moarOptions = response.MoarOptions as IEnumerable<dynamic>;

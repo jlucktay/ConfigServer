@@ -5,8 +5,22 @@
 GET: Gets All clients
 
 POST: Updates client
+Required Claim: option.ClientAdminClaimType 
+GET 'read','write'
+POST 'write'
 
-/\{Client Id} GET: Gets specified client
+/{Client Id} GET: Gets specified client
+
+### Config Client Groups ~/ClientGroup
+GET Gets All Groups
+POST Update Groups
+/{GroupId} GET
+/{GroupId}/Clients GET
+/None/Clients GET
+
+Required Claim: option.ClientAdminClaimType 
+GET 'read','write'
+POST 'write'
 
 ### Config ~/
 /\{Client Id}/\{Config name} GET: Gets config.
@@ -31,6 +45,44 @@ POST: Sets Config from editor model
 /\{clientId}/\{Configuration Set}/\{Config name}.json GET: gets configuration file
 
 ### Upload ~/Upload
-/ConfigurationSet/\{clientId}/\{Config name} POST: Uploads configuration set file
+/ConfigurationSet/\{clientId}/\{Configuration Set} POST: Uploads configuration set file
 
-/Configuration/\{clientId}/\{Configuration Set}/\{Config name} POST: Uploads configuration file
+/Configuration/\{clientId}/\{Config name} POST: Uploads configuration file
+
+### Resource ~/Resource
+/{clientId} GET :Gets Catalogue of resources
+
+/{clientId}/{resource} GET: Gets Resource file
+
+/{clientId}/{resource} POST: Uploads Resource file
+
+/{clientId}/to/{clientId} POST: Copies resources to client in same group
+
+/{clientId}/{resource} DELETE: Delets Resource file
+
+
+### Resource Archive ~/ResourceArchive
+/{clientId} GET: Gets Catalogue of archived resources
+
+/{clientId}/{resource}  GET: Gets archived resource file
+
+/{clientId}/{resource}  DELETE: Deletes archived resource file
+
+/{clientId}?before={date} DELETE:Deletes archived resource files created before set date
+Required Claim: option.ClientAdminClaimType 
+GET 'read','write'
+DELETE 'write'
+
+
+### Config Archive ~/Archive
+/{clientId} GET: Gets Catalogue of archived configs
+
+/{clientId}/{configName}  GET: Gets archived configs json
+
+/{clientId}/{resource}  DELETE: Deletes archived configs
+
+/{clientId}?before={date} DELETE:Deletes archived configs created before set date
+
+Required Claim: option.ClientAdminClaimType 
+GET 'read','write'
+DELETE 'write'

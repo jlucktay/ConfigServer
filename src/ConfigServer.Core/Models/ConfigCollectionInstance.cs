@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace ConfigServer.Core
 {
@@ -22,8 +23,8 @@ namespace ConfigServer.Core
         /// Initializes ConfigCollectionInstance with empty configuration
         /// </summary>
         /// <param name="type">Config Type</param>
-        /// <param name="clientId">Client Id</param>
-        protected ConfigCollectionInstance(Type type, string clientId) : base(type, true, clientId)
+        /// <param name="configurationIdentity">Configuration Identity</param>
+        protected ConfigCollectionInstance(Type type, ConfigurationIdentity configurationIdentity) : base(type, true, configurationIdentity)
         {
         }
 
@@ -52,8 +53,8 @@ namespace ConfigServer.Core
         /// <summary>
         /// Initializes ConfigCollectionInstance with empty configuration
         /// </summary>
-        /// <param name="clientId">Client Id</param>
-        public ConfigCollectionInstance(string clientId) : base(typeof(TConfig), clientId)
+        /// <param name="configurationIdentity">Configuration Identity</param>
+        public ConfigCollectionInstance(ConfigurationIdentity configurationIdentity) : base(typeof(TConfig), configurationIdentity)
         {
             Configuration = new TConfig[0];
         }
@@ -62,8 +63,8 @@ namespace ConfigServer.Core
         /// Initializes ConfigCollectionInstance with supplied configuration
         /// </summary>
         /// <param name="config">configuration</param>
-        /// <param name="clientId">Client Id</param>
-        public ConfigCollectionInstance(IEnumerable<TConfig> config, string clientId) : base(typeof(TConfig), clientId)
+        /// <param name="configurationIdentity">Configuration Identity</param>
+        public ConfigCollectionInstance(IEnumerable<TConfig> config, ConfigurationIdentity configurationIdentity) : base(typeof(TConfig), configurationIdentity)
         {
             Configuration = config.ToArray();
         }

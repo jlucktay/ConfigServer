@@ -1,46 +1,91 @@
 ﻿import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfigurationClientDataService } from '../dataservices/client-data.service';
 import { ConfigurationSetDataService } from '../dataservices/configset-data.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ConfigurationClient } from '../interfaces/client';
-import { ConfigurationSetSummary } from '../interfaces/configurationSetSummary';
-
+import { ResourceDataService } from '../dataservices/resource-data.service';
+import { UserPermissionService } from '../dataservices/userpermission-data.service';
+import { IConfigurationClient } from '../interfaces/configurationClient';
+import { IConfigurationClientSetting } from '../interfaces/configurationClientSetting';
+import { IConfigurationSetSummary } from '../interfaces/configurationSetSummary';
+import { IResourceInfo } from '../interfaces/resourceInfo';
 
 @Component({
     template: `
         <div *ngIf="client">
-            <h2>{{client.name}}</h2>
-                <p>Id: {{client.clientId}}</p>
-                <p>{{client.enviroment}}</p>
-                <p>{{client.description}}</p>
+            <h2 id="client-name">{{client.name}}</h2>
+            <p id="client-id">Id: {{client.clientId}}</p>
+            <p id="client-env">{{client.enviroment}}</p>
+            <p id="client-desc">{{client.description}}</p>
         </div>
-        <h3>ConfigurationSets</h3>
+
+        <resource-overview  [csClientId]="clientId" [csResources]="resources" (onResourcesChanged)="onResourcesChanged($event)" [csIsConfigurator]="isConfigurator"></resource-overview>
+
+        <h3>ConfigurationSets <button type="button" class="btn btn-primary" (click)="goToArchive()">Archive</button></h3>
         <div class="break">
         </div>
         <configSet-overview class="group" *ngFor="let configurationSet of configurationSets" [csClientId]="client.clientId" [csConfigurationSet]="configurationSet" >
         </configSet-overview>
-        <button type="button" (click)="back()">Back</button>
-`
+        <button type="button" class="btn btn-primary" (click)="back()">Back</button>
+`,
 })
 export class ClientOverviewComponent implements OnInit {
-    client: ConfigurationClient;
-    clientId: string;
-    configurationSets: ConfigurationSetSummary[];
-    constructor(private clientDataService: ConfigurationClientDataService, private configSetDataService: ConfigurationSetDataService, private route: ActivatedRoute, private router: Router) {
-
+    public client: IConfigurationClient;
+    public clientId: string;
+    public isConfigurator = false;
+    public configurationSets: IConfigurationSetSummary[];
+    public resources: IResourceInfo[];
+    constructor(private clientDataService: ConfigurationClientDataService, private configSetDataService: ConfigurationSetDataService, private resourceDataService: ResourceDataService, private permissionService: UserPermissionService, private route: ActivatedRoute, private router: Router) {
+        this.clientId = '';
+        this.client = {
+            clientId: '',
+            name: 'Loading...',
+            enviroment: '',
+            description: '',
+            group: '',
+            readClaim: '',
+            configuratorClaim: '',
+            settings: new Array<IConfigurationClientSetting>(),
+        };
+        this.configurationSets = new Array<IConfigurationSetSummary>();
+        this.resources = new Array<IResourceInfo>();
     }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         this.route.params.forEach((value) => {
             this.clientId = value['clientId'];
-            this.clientDataService.getClient(this.clientId)
-                .then(returnedClient => this.client = returnedClient);
-            this.configSetDataService.getConfigurationSets()
-                .then(returnedConfigSet => this.configurationSets = returnedConfigSet);
+            this.loadInitialData(this.clientId);
         });
     }
+    public onResourcesChanged() {
+        this.resourceDataService.getClientResourceInfo(this.clientId)
+            .then((returnedResources) => this.resources = returnedResources);
+    }
 
-    back() {
-        this.router.navigate(['/']);
+    public goToArchive() {
+        this.router.navigate(['/configArchive', this.client.clientId]);
+    }
+
+    public back() {
+        if (this.client.group) {
+            this.router.navigate(['/group', this.client.group]);
+        } else {
+            this.router.navigate(['/group']);
+        }
+    }
+
+    private async loadInitialData(clientId: string) {
+        this.client = await this.clientDataService.getClient(clientId);
+        const permission = await this.permissionService.getPermission();
+        if (!this.client.configuratorClaim) {
+            this.isConfigurator = true;
+        } else if (permission.clientConfiguratorClaims.length !== 0 &&  permission.clientConfiguratorClaims.some((value) => value === this.client.configuratorClaim)) {
+            this.isConfigurator = true;
+        }else {
+            this.isConfigurator = false;
+        }
+        if (this.isConfigurator) {
+            this.configurationSets = await this.configSetDataService.getConfigurationSets();
+            this.resources = await this.resourceDataService.getClientResourceInfo(clientId);
+        }
     }
 }

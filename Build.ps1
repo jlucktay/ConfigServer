@@ -1,3 +1,4 @@
+cd c:
 <#  
 .SYNOPSIS
     You can add this to you build script to ensure that psbuild is available before calling
@@ -65,9 +66,34 @@ function ExecuteGulpTasks
 		Write-Error "gulp asset package failed";
 		exit 1;
 	}
+
+	Write-Host "gulp TsLint"
+	& "gulp" TsLint
+	if ($LastExitCode -ne 0) {
+		Write-Error "gulp tslint failed";
+		exit 1;
+	}
 	Pop-Location
 }
 
+function CheckAssets {
+	if( (Test-Path .\src\ConfigServer.Server\Assets\styles.css) -eq $false) {
+		Write-Error "Asset styles.css not found";
+		exit 1;
+	}
+	if( (Test-Path .\src\ConfigServer.Gui\wwwroot\Assets\app.min.js) -eq $false) {
+		Write-Error "Asset app.min.js not found";
+		exit 1;
+	}
+}
+
+function copyAssets {
+	Copy-Item .\src\ConfigServer.Gui\wwwroot\Assets\app.min.js ./src/ConfigServer.Server\Assets
+		if( (Test-Path ./src/ConfigServer.Server\Assets\app.min.js) -eq $false) {
+		Write-Error "Asset app.min.js not found";
+		exit 1;
+	}
+}
 
 if(Test-Path .\artifacts) { Remove-Item .\artifacts -Force -Recurse }
 
@@ -75,10 +101,11 @@ EnsurePsbuildInstalled
 exec { & dotnet --info }
 exec { & dotnet restore }
 ExecuteGulpTasks
-
+CheckAssets
+copyAssets
 $revision = @{ $true = $env:APPVEYOR_BUILD_NUMBER; $false = 1 }[$env:APPVEYOR_BUILD_NUMBER -ne $NULL];
 $revision = "{0:D4}" -f [convert]::ToInt32($revision, 10);
-$revision = "beta6-" + $revision;
+$revision = "beta9-" + $revision;
 exec { & dotnet build -c Release}
 
 exec { & dotnet test .\test\ConfigServer.Core.Tests\ConfigServer.Core.Tests.csproj -c Release }
@@ -86,11 +113,11 @@ exec { & dotnet test .\test\ConfigServer.Core.Tests\ConfigServer.Core.Tests.cspr
 exec { & dotnet pack .\src\ConfigServer.Core\ConfigServer.Core.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 exec { & dotnet pack .\src\ConfigServer.Server\ConfigServer.Server.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 exec { & dotnet pack .\src\ConfigServer.Client\ConfigServer.Client.csproj -c Release -o .\artifacts --version-suffix=$revision }
+exec { & dotnet pack .\src\ConfigServer.Client.Builder\ConfigServer.Client.Builder.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 
 exec { & dotnet pack .\src\ConfigProviders\ConfigServer.TextProvider.Core\ConfigServer.TextProvider.Core.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 exec { & dotnet pack .\src\ConfigProviders\ConfigServer.FileProvider\ConfigServer.FileProvider.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 exec { & dotnet pack .\src\ConfigProviders\ConfigServer.InMemoryProvider\ConfigServer.InMemoryProvider.csproj -c Release -o .\artifacts --version-suffix=$revision }
 exec { & dotnet pack .\src\ConfigProviders\ConfigServer.AzureBlobStorageProvider\ConfigServer.AzureBlobStorageProvider.csproj -c Release -o .\artifacts --version-suffix=$revision }  
-exec { & dotnet pack .\src\ConfigProviders\ConfigServer.AzureTableStorageProvider\ConfigServer.AzureTableStorageProvider.csproj -c Release -o .\artifacts --version-suffix=$revision }  
 
 
